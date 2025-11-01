@@ -1,0 +1,35 @@
+name: UI Tests UPT Repository
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ui-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Install Playwright
+      run: |
+        dotnet tool install --global Microsoft.Playwright.CLI
+        dotnet restore
+        playwright install --with-deps
+
+    - name: Run tests on Chromium & Firefox
+      run: |
+        dotnet test --logger "trx;LogFileName=ui-tests.trx" -e BROWSER=chromium
+        dotnet test --logger "trx;LogFileName=ui-tests-firefox.trx" -e BROWSER=firefox
+
+    - name: Upload videos as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-videos
+        path: UPTRepoTests/videos/
